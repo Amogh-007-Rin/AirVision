@@ -6,6 +6,13 @@ import plotly.graph_objects as go
 from datetime import datetime
 import time
 
+# Import sklearn libraries for ML tab
+from sklearn.model_selection import train_test_split
+from sklearn.ensemble import RandomForestRegressor, IsolationForest
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import mean_squared_error, r2_score
+from sklearn.preprocessing import StandardScaler
+
 # Import custom modules
 from data_processing import load_and_clean_data, preprocess_data, handle_missing_values
 from visualization import (
@@ -446,16 +453,7 @@ def main():
                 st.subheader("Predictive Modeling & Machine Learning")
                 
                 # Feature selection for ML models
-                # Import necessary ML libraries first to avoid issues
-                try:
-                    from sklearn.model_selection import train_test_split
-                    from sklearn.ensemble import RandomForestRegressor, IsolationForest
-                    from sklearn.linear_model import LinearRegression
-                    from sklearn.metrics import mean_squared_error, r2_score
-                    from sklearn.preprocessing import StandardScaler
-                except ImportError:
-                    st.error("Machine learning libraries not available. Please install sklearn.")
-                    st.stop()
+                # sklearn libraries are imported at the top of the file
                 
                 st.markdown("#### Feature Engineering")
                 
