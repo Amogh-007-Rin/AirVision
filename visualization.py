@@ -228,14 +228,25 @@ def create_distribution_plot(df, variable):
         )
     )
     
-    # Add kernel density estimate
-    kde_x = np.linspace(df[variable].min(), df[variable].max(), 100)
-    kde_y = df[variable].plot.kde().get_lines()[0].get_ydata()
+    # Calculate kernel density estimate using numpy instead of matplotlib
+    from scipy import stats as spstats
     
-    if len(kde_y) > len(kde_x):
-        kde_y = kde_y[:len(kde_x)]
-    elif len(kde_y) < len(kde_x):
-        kde_x = kde_x[:len(kde_y)]
+    # Create a safe range for KDE
+    min_val = df[variable].min()
+    max_val = df[variable].max()
+    kde_x = np.linspace(min_val, max_val, 100)
+    
+    # Use scipy's gaussian_kde instead of pandas/matplotlib
+    try:
+        kde = spstats.gaussian_kde(df[variable].dropna())
+        kde_y = kde(kde_x)
+    except:
+        # Fallback if KDE fails
+        kde_y = np.zeros_like(kde_x)
+        
+    # Normalize to match the histogram scale
+    if kde_y.max() > 0:
+        kde_y = kde_y / kde_y.max() * df[variable].value_counts(bins=30, normalize=True).max() * 5
     
     fig.add_trace(
         go.Scatter(

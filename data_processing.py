@@ -52,10 +52,10 @@ def handle_missing_values(df):
             df_cleaned[col] = df_cleaned[col].interpolate(method='linear', limit_direction='both')
             
             # If there are still NaN values, use forward fill
-            df_cleaned[col] = df_cleaned[col].fillna(method='ffill')
+            df_cleaned[col] = df_cleaned[col].ffill()
             
             # If there are still NaN values (at the start), use backward fill
-            df_cleaned[col] = df_cleaned[col].fillna(method='bfill')
+            df_cleaned[col] = df_cleaned[col].bfill()
             
             # If any NaN values remain, fill with column mean
             df_cleaned[col] = df_cleaned[col].fillna(df_cleaned[col].mean())

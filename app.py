@@ -51,27 +51,13 @@ def main():
     </div>
     """, unsafe_allow_html=True)
     
-    # Add background image
+    # Apply clean dark background
     st.markdown(
-        f"""
+        """
         <style>
-        .stApp {{
-            background-image: url("https://images.unsplash.com/photo-1454165804606-c3d57bc86b40");
-            background-size: cover;
-            background-position: center;
-            background-repeat: no-repeat;
-            background-attachment: fixed;
-        }}
-        .stApp::before {{
-            content: "";
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(14, 17, 23, 0.85);
-            z-index: -1;
-        }}
+        .stApp {
+            background-color: #0E1117;
+        }
         </style>
         """,
         unsafe_allow_html=True,
@@ -173,12 +159,13 @@ def main():
                 st.dataframe(df_processed.head(100), use_container_width=True)
             
             # Create tabs for different analyses
-            tab1, tab2, tab3, tab4, tab5 = st.tabs([
+            tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
                 "Atmospheric Overview", 
                 "Pollutant Analysis", 
                 "Correlation Matrix", 
                 "Temporal Patterns",
-                "Advanced Analytics"
+                "Advanced Analytics",
+                "Machine Learning"
             ])
             
             with tab1:
