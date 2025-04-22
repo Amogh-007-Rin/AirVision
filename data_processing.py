@@ -81,11 +81,21 @@ def preprocess_data(df):
     # Convert date and time columns to datetime format
     if 'Date' in df_processed.columns and 'Time' in df_processed.columns:
         # Combine date and time and convert to datetime
+        # Make sure we explicitly specify the format to avoid parsing errors
         df_processed['DateTime'] = pd.to_datetime(
             df_processed['Date'] + ' ' + df_processed['Time'], 
             format='%d/%m/%Y %H.%M.%S',
             errors='coerce'
         )
+        
+        # Check if DateTime has NaT values and try a more flexible approach if needed
+        if df_processed['DateTime'].isna().any():
+            # Try a more flexible approach for various date formats
+            df_processed['DateTime'] = pd.to_datetime(
+                df_processed['Date'] + ' ' + df_processed['Time'], 
+                dayfirst=True,  # European style dates (day first)
+                errors='coerce'
+            )
     
     # Ensure all numeric columns are of the right type
     numeric_cols = df_processed.columns.difference(['Date', 'Time', 'DateTime'])

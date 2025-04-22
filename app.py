@@ -69,7 +69,7 @@ def main():
     
     # Sidebar
     with st.sidebar:
-        st.image("https://images.unsplash.com/photo-1584111514731-a3efadd23914", use_column_width=True)
+        st.image("https://images.unsplash.com/photo-1584111514731-a3efadd23914", use_container_width=True)
         st.title("Control Panel")
         
         # Data loading section
@@ -397,8 +397,8 @@ def main():
                 
                 # Resample to daily for trend analysis
                 df_trend = df_processed.copy()
-                df_trend['Date'] = pd.to_datetime(df_trend['Date'] + ' ' + df_trend['Time'])
-                df_trend = df_trend.set_index('Date')
+                # We already have a DateTime column that's properly formatted
+                df_trend = df_trend.set_index('DateTime')
                 df_trend_daily = df_trend[trend_pollutant].resample('D').mean().reset_index()
                 df_trend_daily.columns = ['Date', trend_pollutant]
                 

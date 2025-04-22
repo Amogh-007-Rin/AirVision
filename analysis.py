@@ -150,7 +150,7 @@ def perform_time_analysis(df):
         # Create categorical day variable with ordered categories
         df['Day_cat'] = pd.Categorical(df['Day'], categories=day_order, ordered=True)
         
-        daily_df = df.groupby('Day_cat')[numeric_cols].mean().reset_index()
+        daily_df = df.groupby('Day_cat', observed=True)[numeric_cols].mean().reset_index()
         daily_df.rename(columns={'Day_cat': 'Day'}, inplace=True)
         
         result['daily'] = daily_df
@@ -170,7 +170,7 @@ def perform_time_analysis(df):
             # Create categorical month variable with ordered categories
             df['Month_cat'] = pd.Categorical(df['Month'], categories=month_order, ordered=True)
             
-            monthly_df = df.groupby('Month_cat')[numeric_cols].mean().reset_index()
+            monthly_df = df.groupby('Month_cat', observed=True)[numeric_cols].mean().reset_index()
             monthly_df.rename(columns={'Month_cat': 'Month'}, inplace=True)
             
             result['monthly'] = monthly_df
