@@ -441,6 +441,225 @@ def main():
                             file_name="air_quality_cleaned.csv",
                             mime="text/csv",
                         )
+            
+            with tab6:
+                st.subheader("Predictive Modeling & Machine Learning")
+                
+                # Feature selection for ML models
+                # Import necessary ML libraries first to avoid issues
+                try:
+                    from sklearn.model_selection import train_test_split
+                    from sklearn.ensemble import RandomForestRegressor, IsolationForest
+                    from sklearn.linear_model import LinearRegression
+                    from sklearn.metrics import mean_squared_error, r2_score
+                    from sklearn.preprocessing import StandardScaler
+                except ImportError:
+                    st.error("Machine learning libraries not available. Please install sklearn.")
+                    st.stop()
+                
+                st.markdown("#### Feature Engineering")
+                
+                target_col = st.selectbox(
+                    "Select Target Variable to Predict",
+                    options=pollutants,
+                    index=0
+                )
+                
+                feature_cols = st.multiselect(
+                    "Select Features for the Model",
+                    options=[col for col in pollutants if col != target_col],
+                    default=[col for col in pollutants if col != target_col][:3]
+                )
+                
+                if len(feature_cols) > 0 and target_col:
+                    # ML libraries are already imported at the top of the tab
+                    
+                    # Prepare data for ML
+                    ml_df = df_processed[feature_cols + [target_col]].dropna()
+                    
+                    # Feature importance analysis
+                    st.markdown("#### Feature Importance Analysis")
+                    
+                    X = ml_df[feature_cols]
+                    y = ml_df[target_col]
+                    
+                    # Split data
+                    X_train, X_test, y_train, y_test = train_test_split(
+                        X, y, test_size=0.25, random_state=42
+                    )
+                    
+                    # Train a Random Forest model
+                    rf_model = RandomForestRegressor(n_estimators=100, random_state=42)
+                    rf_model.fit(X_train, y_train)
+                    
+                    # Get feature importances
+                    importances = rf_model.feature_importances_
+                    importance_df = pd.DataFrame({
+                        'Feature': feature_cols,
+                        'Importance': importances
+                    }).sort_values('Importance', ascending=False)
+                    
+                    # Display feature importance
+                    fig = px.bar(
+                        importance_df,
+                        x='Feature',
+                        y='Importance',
+                        color='Importance',
+                        color_continuous_scale=[COLORS["neon_blue"], COLORS["neon_pink"]],
+                        title=f"Feature Importance for Predicting {target_col}"
+                    )
+                    fig.update_layout(
+                        template="plotly_dark",
+                        paper_bgcolor='rgba(0,0,0,0)',
+                        plot_bgcolor='rgba(0,0,0,0.2)',
+                    )
+                    st.plotly_chart(fig, use_container_width=True)
+                    
+                    # Model selection
+                    model_type = st.selectbox(
+                        "Select Machine Learning Model",
+                        options=["Random Forest", "Linear Regression"],
+                        index=0
+                    )
+                    
+                    # Model training
+                    st.markdown("#### Model Training & Evaluation")
+                    
+                    if model_type == "Random Forest":
+                        model = rf_model
+                        model_name = "Random Forest"
+                    else:
+                        model = LinearRegression()
+                        model.fit(X_train, y_train)
+                        model_name = "Linear Regression"
+                    
+                    # Make predictions
+                    y_pred = model.predict(X_test)
+                    
+                    # Calculate metrics
+                    mse = mean_squared_error(y_test, y_pred)
+                    r2 = r2_score(y_test, y_pred)
+                    
+                    # Display metrics
+                    col1, col2 = st.columns(2)
+                    with col1:
+                        st.metric(
+                            label="Mean Squared Error",
+                            value=f"{mse:.2f}"
+                        )
+                    with col2:
+                        st.metric(
+                            label="R² Score",
+                            value=f"{r2:.2f}"
+                        )
+                    
+                    # Plot actual vs predicted
+                    results_df = pd.DataFrame({
+                        'Actual': y_test,
+                        'Predicted': y_pred
+                    }).reset_index(drop=True)
+                    
+                    fig = px.scatter(
+                        results_df, 
+                        x='Actual', 
+                        y='Predicted',
+                        color_discrete_sequence=[COLORS["neon_cyan"]],
+                        title=f"{model_name} Model: Actual vs Predicted {target_col}"
+                    )
+                    
+                    # Add perfect prediction line
+                    min_val = min(results_df['Actual'].min(), results_df['Predicted'].min())
+                    max_val = max(results_df['Actual'].max(), results_df['Predicted'].max())
+                    
+                    fig.add_trace(
+                        go.Scatter(
+                            x=[min_val, max_val],
+                            y=[min_val, max_val],
+                            mode='lines',
+                            name='Perfect Prediction',
+                            line=dict(color=COLORS["neon_pink"], width=2, dash='dash')
+                        )
+                    )
+                    
+                    fig.update_layout(
+                        template="plotly_dark",
+                        paper_bgcolor='rgba(0,0,0,0)',
+                        plot_bgcolor='rgba(0,0,0,0.2)',
+                        xaxis_title="Actual Values",
+                        yaxis_title="Predicted Values"
+                    )
+                    st.plotly_chart(fig, use_container_width=True)
+                    
+                    # Anomaly detection
+                    st.markdown("#### Anomaly Detection")
+                    
+                    # IsolationForest is already imported at the top of the tab
+                    
+                    # Prepare data for anomaly detection
+                    anomaly_df = df_processed[pollutants].copy()
+                    
+                    # Normalize data
+                    scaler = StandardScaler()
+                    anomaly_data = scaler.fit_transform(anomaly_df)
+                    
+                    # Train isolation forest
+                    isolation_forest = IsolationForest(
+                        contamination=0.05,  # 5% of data as anomalies
+                        random_state=42
+                    )
+                    anomaly_labels = isolation_forest.fit_predict(anomaly_data)
+                    
+                    # Add results back to dataframe
+                    anomaly_results = df_processed[['DateTime']].copy()
+                    anomaly_results['Anomaly'] = anomaly_labels
+                    anomaly_results['Color'] = anomaly_results['Anomaly'].apply(
+                        lambda x: 'Normal' if x == 1 else 'Anomaly'
+                    )
+                    
+                    # Add target variable
+                    anomaly_results[target_col] = df_processed[target_col].values
+                    
+                    # Plot anomalies
+                    fig = px.scatter(
+                        anomaly_results,
+                        x='DateTime',
+                        y=target_col,
+                        color='Color',
+                        color_discrete_map={
+                            'Normal': COLORS["neon_blue"],
+                            'Anomaly': COLORS["neon_pink"]
+                        },
+                        title=f"Anomaly Detection in {target_col} Time Series"
+                    )
+                    
+                    fig.update_layout(
+                        template="plotly_dark",
+                        paper_bgcolor='rgba(0,0,0,0)',
+                        plot_bgcolor='rgba(0,0,0,0.2)',
+                        xaxis_title="Time",
+                        yaxis_title=target_col
+                    )
+                    st.plotly_chart(fig, use_container_width=True)
+                    
+                    # Count anomalies
+                    anomaly_count = (anomaly_results['Anomaly'] == -1).sum()
+                    normal_count = (anomaly_results['Anomaly'] == 1).sum()
+                    
+                    # Display anomaly statistics
+                    col1, col2 = st.columns(2)
+                    with col1:
+                        st.metric(
+                            label="Detected Anomalies",
+                            value=f"{anomaly_count}"
+                        )
+                    with col2:
+                        st.metric(
+                            label="Anomaly Percentage",
+                            value=f"{100 * anomaly_count / (anomaly_count + normal_count):.2f}%"
+                        )
+                    
+                else:
+                    st.warning("Please select at least one feature and a target variable for modeling.")
         
         # Footer with sci-fi theme
         st.markdown(
