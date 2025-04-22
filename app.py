@@ -410,15 +410,25 @@ def main():
                 df_trend_daily.columns = ['Date', trend_pollutant]
                 
                 # Add trend line
-                fig = px.scatter(
-                    df_trend_daily, 
-                    x='Date', 
-                    y=trend_pollutant,
-                    trendline="lowess",
-                    trendline_color_override=COLORS["neon_cyan"],
-                    title=f"Long-term {trend_pollutant} Trend Analysis",
-                    color_discrete_sequence=[COLORS["neon_purple"]]
-                )
+                try:
+                    fig = px.scatter(
+                        df_trend_daily, 
+                        x='Date', 
+                        y=trend_pollutant,
+                        trendline="lowess",
+                        trendline_color_override=COLORS["neon_cyan"],
+                        title=f"Long-term {trend_pollutant} Trend Analysis",
+                        color_discrete_sequence=[COLORS["neon_purple"]]
+                    )
+                except Exception as e:
+                    # Fallback to basic scatter plot without trendline if statsmodels isn't available
+                    fig = px.scatter(
+                        df_trend_daily, 
+                        x='Date', 
+                        y=trend_pollutant,
+                        title=f"Long-term {trend_pollutant} Trend Analysis",
+                        color_discrete_sequence=[COLORS["neon_purple"]]
+                    )
                 fig.update_layout(
                     template="plotly_dark",
                     paper_bgcolor='rgba(0,0,0,0)',
